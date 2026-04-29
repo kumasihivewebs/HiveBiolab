@@ -113,10 +113,10 @@ INSTALLED_APPS = [
 # ─────────────────────────────
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -162,22 +162,16 @@ if TESTING:
         }
     }
 else:
-    default_database_url = config(
-        "DATABASE_URL",
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-    )
-    requires_db_ssl = default_database_url.startswith(("postgres://", "postgresql://"))
     DATABASES = {
-        "default": dj_database_url.parse(
-            default_database_url,
-            conn_max_age=config("DATABASE_CONN_MAX_AGE", default=600, cast=int),
-            ssl_require=config(
-                "DATABASE_SSL_REQUIRE",
-                default=requires_db_ssl,
-                cast=bool,
-            ),
-        )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST"),  # MUST be 'db'
+        "PORT": config("DB_PORT"),
     }
+}
 
 
 # ─────────────────────────────

@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16
+    container_name: biolab-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: biolab
+      POSTGRES_USER: africaosh
+      POSTGRES_PASSWORD: ThisIsAStrongPasswordforHiveBiolab
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - appnet
+
+  api:
+    build: .
+    container_name: hivebiolab-api
+    command: gunicorn hivebiolab.wsgi.application \
+      -k uvicorn.workers.UvicornWorker \
+      -b 0.0.0.0:8001 \
+      --workers 3 \
+      --timeout 120
+
+    env_file:
+      - .env
+
+    depends_on:
+      - db
+
+    restart: unless-stopped
+
+    volumes:
+      - .:/app
+      - ./staticfiles:/app/staticfiles
+
+    networks:
+      - appnet
+
+networks:
+  appnet:
+
+volumes:
+  postgres_data:
