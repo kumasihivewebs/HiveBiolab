@@ -11,14 +11,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Core security
 # ─────────────────────────────
 
-SECRET_KEY = config("SECRET_KEY")
+SECRET_KEY = config("SECRET_KEY", default="django-insecure-local-only")
 
 DEBUG = config("DEBUG", default=False, cast=bool)
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
+DEFAULT_ALLOWED_HOSTS = "127.0.0.1 localhost .onrender.com .up.railway.app"
 ALLOWED_HOSTS = [
     host.strip()
-    for host in config("ALLOWED_HOSTS", default="api.biolab.kumasihive.com")
+    for host in config(
+        "ALLOWED_HOSTS",
+        default=f"{DEFAULT_ALLOWED_HOSTS} api.biolab.kumasihive.com",
+    )
     .replace(",", " ")
     .split()
     if host.strip()
@@ -30,7 +34,8 @@ ALLOWED_HOSTS = [
 # ─────────────────────────────
 
 FRONTEND_ORIGINS_SETTING = config(
-    "FRONTEND_ORIGINS", "https://biolab.kumasihive.com"
+    "FRONTEND_ORIGINS",
+    "http://localhost:8080 http://127.0.0.1:8080 https://biolab.kumasihive.com",
 ).strip()
 
 ALLOW_ALL_ORIGINS = FRONTEND_ORIGINS_SETTING == "*"
@@ -48,9 +53,14 @@ else:
 
 CSRF_TRUSTED_ORIGINS = [
     origin
-    for origin in config("CSRF_TRUSTED_ORIGINS", FRONTEND_ORIGINS_SETTING).split()
+    for origin in config(
+        "CSRF_TRUSTED_ORIGINS",
+        FRONTEND_ORIGINS_SETTING,
+    ).split()
     if origin
 ]
+
+USE_X_FORWARDED_HOST = config("USE_X_FORWARDED_HOST", default=True, cast=bool)
 
 
 # ─────────────────────────────
@@ -58,20 +68,24 @@ CSRF_TRUSTED_ORIGINS = [
 # ─────────────────────────────
 
 if not DEBUG and not TESTING:
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)
+    SESSION_COOKIE_SAMESITE = config("SESSION_COOKIE_SAMESITE", default="Lax")
 
-    CSRF_COOKIE_SECURE = True
-    CSRF_COOKIE_SAMESITE = "None"
-    CSRF_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
+    CSRF_COOKIE_SAMESITE = config("CSRF_COOKIE_SAMESITE", default="Lax")
+    CSRF_COOKIE_HTTPONLY = config("CSRF_COOKIE_HTTPONLY", default=True, cast=bool)
 
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 3600
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
+    SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=3600, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config(
+        "SECURE_HSTS_INCLUDE_SUBDOMAINS",
+        default=True,
+        cast=bool,
+    )
+    SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=True, cast=bool)
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = "DENY"
+    X_FRAME_OPTIONS = config("X_FRAME_OPTIONS", default="DENY")
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
@@ -99,10 +113,10 @@ INSTALLED_APPS = [
 # ─────────────────────────────
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -137,7 +151,7 @@ TEMPLATES = [
 
 
 # ─────────────────────────────
-# Database (SQLite – valid for single-instance)
+# Database (host-provided SQL database, SQLite locally by default)
 # ─────────────────────────────
 
 if TESTING:
@@ -149,12 +163,15 @@ if TESTING:
     }
 else:
     DATABASES = {
-        "default": dj_database_url.config(
-            default=config("DATABASE_URL"),
-            conn_max_age=600,
-            ssl_require=True,
-        )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST"),  # MUST be 'db'
+        "PORT": config("DB_PORT"),
     }
+}
 
 
 # ─────────────────────────────

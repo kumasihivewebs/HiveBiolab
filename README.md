@@ -1,6 +1,6 @@
 # HiveBiolab Backend
 
-This Django service implements the API surface that `hive-bio` reaches out to when it needs persistence or notifications. Incoming submissions—newsletter signups, contact messages, and training registrations—are stored in Django models backed by the configured SQL database (SQLite by default), so you can review them using the admin at `/admin/` or query them directly from the database.
+This Django service implements the API surface that `hive-bio` reaches out to when it needs persistence or notifications. Incoming submissions are stored in Django models backed by a conventional SQL database: local SQLite for development, or a managed PostgreSQL instance on hosts like Railway, Render, or similar platforms. There is no Firebase dependency in the active backend code path.
 
 ## Getting started
 
@@ -12,7 +12,7 @@ This Django service implements the API surface that `hive-bio` reaches out to wh
    pip install -r requirements.txt
    ```
 
-2. Copy the provided `.env` file or create a new one (*keep it out of source control*) and update it with host/CORS settings plus real secrets such as `SECRET_KEY`. The file is automatically loaded by `python-dotenv`.
+2. Copy `.env.example` to `.env` (*keep it out of source control*) and update it with host/CORS settings plus real secrets such as `SECRET_KEY`. The file is automatically loaded by `python-decouple`.
 3. Run Django migrations so the `contact`, `newsletter`, and `training` tables exist.
 
    ```bash
@@ -29,23 +29,23 @@ This Django service implements the API surface that `hive-bio` reaches out to wh
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `SECRET_KEY` | Django secret key (must be kept secret in production). | (set a long random value per environment) |
+| `SECRET_KEY` | Django secret key (must be kept secret in production). | `django-insecure-local-only` for local dev only |
 | `DEBUG` | Disable for production (`false`); `true` enables Django’s error pages locally. | `false` |
-| `ALLOWED_HOSTS` | Space-separated hosts allowed to serve the API. | `*` |
-| `FRONTEND_ORIGINS` | Space-separated origins that can make CORS requests. | `https://biolab.kumasihive.com` |
+| `ALLOWED_HOSTS` | Space-separated hosts allowed to serve the API. | `127.0.0.1 localhost .onrender.com .up.railway.app api.biolab.kumasihive.com` |
+| `FRONTEND_ORIGINS` | Space-separated origins that can make CORS requests. | `http://localhost:8080 http://127.0.0.1:8080 https://biolab.kumasihive.com` |
 | `CSRF_TRUSTED_ORIGINS` | Origins allowed to bypass the CSRF origin check (defaults to `FRONTEND_ORIGINS`). | (see above) |
-| `JAZZMIN_SITE_TITLE` | Browser title for the admin. | `HiveBiolab Admin` |
-| `JAZZMIN_SITE_HEADER` | Header text inside the admin layout. | `HiveBiolab` |
-| `JAZZMIN_SITE_BRAND` | Branding text shown in the sidebar. | `HiveBiolab` |
-| `JAZZMIN_WELCOME_SIGN` | Welcome message on the admin index page. | `Review newsletter, contact, and training requests` |
-| `JAZZMIN_COPYRIGHT` | Footer text shown in Jazzmin. | `HiveBiolab © 2025` |
+| `DATABASE_URL` | Database connection string. Use PostgreSQL in production, SQLite locally. | `sqlite:///.../db.sqlite3` |
+| `DATABASE_SSL_REQUIRE` | Require SSL/TLS for the database connection. | `true` for Postgres URLs, `false` for local SQLite |
+| `DATABASE_CONN_MAX_AGE` | Persistent connection lifetime in seconds. | `600` |
+| `SECURE_SSL_REDIRECT` | Redirect HTTP to HTTPS in production. | `true` |
+| `USE_X_FORWARDED_HOST` | Trust forwarded host headers from the platform proxy. | `true` |
 
-`python-dotenv` automatically loads the `.env` file when Django boots, so any env var you place there is visible to the settings module.
+`python-decouple` automatically loads the `.env` file when Django boots, so any env var you place there is visible to the settings module.
 
 ## Environment file
 
-- Copy the provided `.env` (or create a new one) and populate it with sensible host, CORS, and Jazzmin labels plus secrets such as `SECRET_KEY`. Keep that file out of version control.
-- Each `manage.py` invocation and Cloud Run container sees the same configuration thanks to `python-dotenv`.
+- Copy `.env.example` to `.env` and populate it with sensible host, CORS, and database values plus secrets such as `SECRET_KEY`. Keep that file out of version control.
+- Each `manage.py` invocation and deployed container reads the same environment variables through `python-decouple`.
 
 ## Stored data
 
@@ -57,6 +57,17 @@ This Django service implements the API surface that `hive-bio` reaches out to wh
 ## API endpoints
 
 Use the JSON payloads below when the Vite app submits data. All endpoints accept `POST` only, return JSON, and respond with `detail` plus the created record `id`.
+
+### `GET /health/`
+
+Response:
+
+```json
+{
+  "status": "ok",
+  "database": "ok"
+}
+```
 
 ### `POST /api/newsletter/subscribe/`
 
@@ -133,6 +144,8 @@ python manage.py test
 
 ## Deployment notes
 
-- Run `python manage.py collectstatic` and serve the `staticfiles` directory if you host static assets from Django.
-- Run `python manage.py migrate` before the service goes live so the tables exist in the production database.
-- When deploying, set the same environment variables in the service configuration (especially hosts and CORS origins) and keep `DEBUG=False`.
+- Install from `requirements.txt`; it now includes `dj-database-url` and `psycopg` so the app can bind directly to a managed PostgreSQL instance.
+- Run `python manage.py collectstatic --noinput` during build and `python manage.py migrate --noinput` before the service starts serving traffic.
+- Set `DATABASE_URL` to your managed Postgres connection string. On Railway you can reference `${{Postgres.DATABASE_URL}}`; on Render use the managed Postgres connection string injected into the web service.
+- Set `ALLOWED_HOSTS`, `FRONTEND_ORIGINS`, and `CSRF_TRUSTED_ORIGINS` for your real frontend/backend domains, and keep `DEBUG=False`.
+- Use `/health/` as the platform health check path.
