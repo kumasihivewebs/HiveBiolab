@@ -15,8 +15,7 @@ RUN chmod +x build.sh && ./build.sh
 
 EXPOSE 8001
 
-CMD ["gunicorn", "hivebiolab.wsgi.application", \
-     "-k", "uvicorn.workers.UvicornWorker", \
-     "-b", "0.0.0.0:8001", \
+CMD ["gunicorn", "hivebiolab.wsgi:application", \
+     "-b", "0.0.0.0:8002", \
      "--workers", "3", \
      "--timeout", "120"]

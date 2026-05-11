@@ -7,16 +7,31 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def config_bool(name: str, default: bool = False) -> bool:
+    value = config(name, default=None)
+
+    if value is None or value == "":
+        return default
+
+    normalized = str(value).strip().lower()
+    if normalized in {"1", "true", "yes", "on", "dev", "development", "local"}:
+        return True
+    if normalized in {"0", "false", "no", "off", "prod", "production", "release"}:
+        return False
+
+    raise ValueError(f"Invalid truth value for {name}: {value}")
+
+
 # ─────────────────────────────
 # Core security
 # ─────────────────────────────
 
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-local-only")
 
-DEBUG = config("DEBUG", default=False, cast=bool)
+DEBUG = config_bool("DEBUG", default=False)
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
-DEFAULT_ALLOWED_HOSTS = "127.0.0.1 localhost .onrender.com .up.railway.app"
+DEFAULT_ALLOWED_HOSTS = "127.0.0.1 localhost"
 ALLOWED_HOSTS = [
     host.strip()
     for host in config(
@@ -151,8 +166,11 @@ TEMPLATES = [
 
 
 # ─────────────────────────────
-# Database (host-provided SQL database, SQLite locally by default)
+# Database
 # ─────────────────────────────
+
+DATABASE_CONN_MAX_AGE = config("DATABASE_CONN_MAX_AGE", default=600, cast=int)
+DATABASE_URL = config("DATABASE_URL", default="").strip()
 
 if TESTING:
     DATABASES = {
@@ -161,17 +179,26 @@ if TESTING:
             "NAME": ":memory:",
         }
     }
+elif DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=DATABASE_CONN_MAX_AGE,
+            ssl_require=config("DATABASE_SSL_REQUIRE", default=False, cast=bool),
+        )
+    }
 else:
     DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
-        "HOST": config("DB_HOST"),  # MUST be 'db'
-        "PORT": config("DB_PORT"),
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME", default="biolab"),
+            "USER": config("DB_USER", default="africaosh"),
+            "PASSWORD": config("DB_PASSWORD", default=""),
+            "HOST": config("DB_HOST", default="db"),
+            "PORT": config("DB_PORT", default="5432"),
+            "CONN_MAX_AGE": DATABASE_CONN_MAX_AGE,
+        }
     }
-}
 
 
 # ─────────────────────────────

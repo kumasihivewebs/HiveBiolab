@@ -1,6 +1,6 @@
 # HiveBiolab Backend
 
-This Django service implements the API surface that `hive-bio` reaches out to when it needs persistence or notifications. Incoming submissions are stored in Django models backed by a conventional SQL database: local SQLite for development, or a managed PostgreSQL instance on hosts like Railway, Render, or similar platforms. There is no Firebase dependency in the active backend code path.
+This Django service implements the API surface that `hive-bio` reaches out to when it needs persistence or notifications. Incoming submissions are stored in Django models backed by PostgreSQL. The local and server Docker setup runs Postgres as the `db` service; managed hosts can still use a `DATABASE_URL`. There is no Firebase dependency in the active backend code path.
 
 ## Getting started
 
@@ -13,13 +13,21 @@ This Django service implements the API surface that `hive-bio` reaches out to wh
    ```
 
 2. Copy `.env.example` to `.env` (*keep it out of source control*) and update it with host/CORS settings plus real secrets such as `SECRET_KEY`. The file is automatically loaded by `python-decouple`.
-3. Run Django migrations so the `contact`, `newsletter`, and `training` tables exist.
+3. Run Postgres and the API with Docker Compose:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+   The Postgres container creates the database named by `DB_NAME` the first time its volume is initialized. The API container waits for Postgres, runs migrations, then starts Gunicorn on port `8001`.
+
+4. For non-Docker development, start a local Postgres instance using the same `DB_*` variables, then run Django migrations so the `contact`, `newsletter`, and `training` tables exist.
 
    ```bash
    python manage.py migrate
    ```
 
-4. Start the dev server:
+5. Start the dev server:
 
    ```bash
    python manage.py runserver
@@ -31,11 +39,16 @@ This Django service implements the API surface that `hive-bio` reaches out to wh
 | --- | --- | --- |
 | `SECRET_KEY` | Django secret key (must be kept secret in production). | `django-insecure-local-only` for local dev only |
 | `DEBUG` | Disable for production (`false`); `true` enables Django’s error pages locally. | `false` |
-| `ALLOWED_HOSTS` | Space-separated hosts allowed to serve the API. | `127.0.0.1 localhost .onrender.com .up.railway.app api.biolab.kumasihive.com` |
+| `ALLOWED_HOSTS` | Space-separated hosts allowed to serve the API. | `127.0.0.1 localhost api.biolab.kumasihive.com` |
 | `FRONTEND_ORIGINS` | Space-separated origins that can make CORS requests. | `http://localhost:8080 http://127.0.0.1:8080 https://biolab.kumasihive.com` |
 | `CSRF_TRUSTED_ORIGINS` | Origins allowed to bypass the CSRF origin check (defaults to `FRONTEND_ORIGINS`). | (see above) |
-| `DATABASE_URL` | Database connection string. Use PostgreSQL in production, SQLite locally. | `sqlite:///.../db.sqlite3` |
-| `DATABASE_SSL_REQUIRE` | Require SSL/TLS for the database connection. | `true` for Postgres URLs, `false` for local SQLite |
+| `DB_NAME` | PostgreSQL database name used by Docker Compose. | `biolab` |
+| `DB_USER` | PostgreSQL username used by Docker Compose. | `africaosh` |
+| `DB_PASSWORD` | PostgreSQL password used by Docker Compose. Required in `.env`. | unset |
+| `DB_HOST` | PostgreSQL host. Use `db` inside Docker Compose. | `db` |
+| `DB_PORT` | PostgreSQL port. | `5432` |
+| `DATABASE_URL` | Optional managed/external PostgreSQL connection string. When set, it overrides the `DB_*` values. | unset |
+| `DATABASE_SSL_REQUIRE` | Require SSL/TLS for `DATABASE_URL` connections. | `false` |
 | `DATABASE_CONN_MAX_AGE` | Persistent connection lifetime in seconds. | `600` |
 | `SECURE_SSL_REDIRECT` | Redirect HTTP to HTTPS in production. | `true` |
 | `USE_X_FORWARDED_HOST` | Trust forwarded host headers from the platform proxy. | `true` |
@@ -144,8 +157,8 @@ python manage.py test
 
 ## Deployment notes
 
-- Install from `requirements.txt`; it now includes `dj-database-url` and `psycopg` so the app can bind directly to a managed PostgreSQL instance.
+- Install from `requirements.txt`; it includes `dj-database-url` and `psycopg` so the app can bind to Docker Postgres or a managed PostgreSQL instance.
 - Run `python manage.py collectstatic --noinput` during build and `python manage.py migrate --noinput` before the service starts serving traffic.
-- Set `DATABASE_URL` to your managed Postgres connection string. On Railway you can reference `${{Postgres.DATABASE_URL}}`; on Render use the managed Postgres connection string injected into the web service.
+- For Docker on your own server, set the `DB_*` values in `.env` and run `docker compose up -d --build`. For a managed database, set `DATABASE_URL` instead.
 - Set `ALLOWED_HOSTS`, `FRONTEND_ORIGINS`, and `CSRF_TRUSTED_ORIGINS` for your real frontend/backend domains, and keep `DEBUG=False`.
 - Use `/health/` as the platform health check path.
