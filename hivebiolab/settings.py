@@ -52,13 +52,13 @@ ALLOWED_HOSTS = config_list("ALLOWED_HOSTS", default="api.biolab.kumasihive.com"
 
 FRONTEND_ORIGINS_SETTING = config(
     "FRONTEND_ORIGINS",
-    "https://biolab.kumasihive.com",
+    "https://biolab.kumasihive.com https://www.biolab.kumasihive.com",
 ).strip()
 
 ALLOW_ALL_ORIGINS = FRONTEND_ORIGINS_SETTING == "*"
 FRONTEND_ORIGINS = config_list(
     "FRONTEND_ORIGINS",
-    default="https://biolab.kumasihive.com",
+    default="https://biolab.kumasihive.com https://www.biolab.kumasihive.com",
 )
 
 CORS_ALLOW_CREDENTIALS = True
