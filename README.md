@@ -19,7 +19,7 @@ This Django service implements the API surface that `hive-bio` reaches out to wh
    docker compose up -d --build
    ```
 
-   The Postgres container creates the database named by `DB_NAME` the first time its volume is initialized. The API container waits for Postgres, runs migrations, then starts Gunicorn on port `8001`.
+   The Postgres container creates the database named by `DB_NAME` the first time its volume is initialized. The API container waits for Postgres, runs migrations, then starts Gunicorn on port `8002`.
 
 4. For non-Docker development, start a local Postgres instance using the same `DB_*` variables, then run Django migrations so the `contact`, `newsletter`, and `training` tables exist.
 
