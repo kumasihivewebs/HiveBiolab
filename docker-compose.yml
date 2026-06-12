@@ -23,7 +23,7 @@ services:
 
   api:
     build: .
-    container_name: hivebiolab-api
+    container_name: biolab-api
     command: >
       sh -c "python manage.py migrate --noinput &&
              gunicorn hivebiolab.wsgi:application
