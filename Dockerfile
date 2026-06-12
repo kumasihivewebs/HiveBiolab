@@ -13,7 +13,7 @@ COPY . .
 
 RUN chmod +x build.sh && ./build.sh
 
-EXPOSE 8001
+EXPOSE 8002
 
 CMD ["gunicorn", "hivebiolab.wsgi:application", \
      "-b", "0.0.0.0:8002", \
