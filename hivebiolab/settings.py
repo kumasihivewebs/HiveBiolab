@@ -43,7 +43,7 @@ DEBUG = config_bool("DEBUG", default=False)
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 BUILDING = config_bool("DJANGO_BUILD", default=False)
 
-ALLOWED_HOSTS = config_list("ALLOWED_HOSTS", default="api.biolab.kumasihive.com")
+ALLOWED_HOSTS = config_list("ALLOWED_HOSTS", default="biolab-api.kumasihive.com")
 
 
 # ─────────────────────────────
