@@ -1,6 +1,8 @@
+import os
 import sys
 from pathlib import Path
 
+import cloudinary
 import dj_database_url
 from decouple import config
 
@@ -22,6 +24,15 @@ def config_bool(name: str, default: bool = False) -> bool:
     raise ValueError(f"Invalid truth value for {name}: {value}")
 
 
+def config_list(name: str, default: str = "") -> list[str]:
+    value = config(name, default=default)
+    return [
+        item.strip()
+        for item in str(value).replace(",", " ").split()
+        if item.strip()
+    ]
+
+
 # ─────────────────────────────
 # Core security
 # ─────────────────────────────
@@ -31,16 +42,7 @@ SECRET_KEY = config("SECRET_KEY", default="django-insecure-local-only")
 DEBUG = config_bool("DEBUG", default=False)
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in config(
-        "ALLOWED_HOSTS",
-        default=f"api.biolab.kumasihive.com",
-    )
-    .replace(",", " ")
-    .split()
-    if host.strip()
-]
+ALLOWED_HOSTS = config_list("ALLOWED_HOSTS", default="api.biolab.kumasihive.com")
 
 
 # ─────────────────────────────
@@ -53,6 +55,10 @@ FRONTEND_ORIGINS_SETTING = config(
 ).strip()
 
 ALLOW_ALL_ORIGINS = FRONTEND_ORIGINS_SETTING == "*"
+FRONTEND_ORIGINS = config_list(
+    "FRONTEND_ORIGINS",
+    default="https://biolab.kumasihive.com",
+)
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -61,18 +67,12 @@ if ALLOW_ALL_ORIGINS:
     CORS_ALLOWED_ORIGINS = []
 else:
     CORS_ALLOW_ALL_ORIGINS = False
-    CORS_ALLOWED_ORIGINS = [
-        origin for origin in FRONTEND_ORIGINS_SETTING.split() if origin
-    ]
+    CORS_ALLOWED_ORIGINS = FRONTEND_ORIGINS
 
-CSRF_TRUSTED_ORIGINS = [
-    origin
-    for origin in config(
-        "CSRF_TRUSTED_ORIGINS",
-        FRONTEND_ORIGINS_SETTING,
-    ).split()
-    if origin
-]
+CSRF_TRUSTED_ORIGINS = config_list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=FRONTEND_ORIGINS_SETTING,
+)
 
 USE_X_FORWARDED_HOST = config("USE_X_FORWARDED_HOST", default=True, cast=bool)
 
@@ -115,6 +115,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "cloudinary_storage",
+    "cloudinary",
     "corsheaders",
     "training",
     "newsletter",
@@ -200,6 +202,88 @@ else:
     }
 
 
+# Cloudinary settings
+cloudinary.config(
+    cloud_name=config("CLOUDINARY_CLOUD_NAME"),
+    api_key=config("CLOUDINARY_API_KEY"),
+    api_secret=config("CLOUDINARY_API_SECRET"),
+    secure=True,
+)
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": config("CLOUDINARY_API_KEY"),
+    "API_SECRET": config("CLOUDINARY_API_SECRET"),
+    "SECURE": True,
+}
+
+
+# Static files
+MEDIA_URL = f"https://res.cloudinary.com/{config('CLOUDINARY_CLOUD_NAME')}/image/upload/f_auto,q_auto/"
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_DIR = BASE_DIR / "static"
+STATICFILES_DIRS = [STATIC_DIR] if STATIC_DIR.exists() else []
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+
+# email settings
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = config("EMAIL_HOST")
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = config("EMAIL_PORT", cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "debug.log"),
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "newsletter.views": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
+
+
 # ─────────────────────────────
 # Auth / i18n
 # ─────────────────────────────
@@ -218,14 +302,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-
-# ─────────────────────────────
-# Static files
-# ─────────────────────────────
-
-STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
