@@ -1,8 +1,9 @@
 import logging
 
 from django.db import DatabaseError
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
 
 from hivebiolab.api_helpers import (
     parse_json_body,
@@ -10,6 +11,7 @@ from hivebiolab.api_helpers import (
     json_success,
     get_client_metadata,
 )
+from hivebiolab.content_data import CONTACT_PAGE_DATA
 
 from .models import ContactMessage
 
@@ -17,8 +19,11 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
-@require_POST
+@require_http_methods(["GET", "POST"])
 def submit_message(request):
+    if request.method == "GET":
+        return JsonResponse({"page": CONTACT_PAGE_DATA})
+
     payload = parse_json_body(request)
     if payload is None:
         return json_error("Invalid JSON payload.")

@@ -2,6 +2,21 @@ from __future__ import annotations
 
 from typing import List, Dict
 
+PROJECTS_PAGE_DATA: Dict[str, object] = {
+    "title": "Projects",
+    "eyebrow": "Open science in practice",
+    "description": (
+        "Explore Hive Biolab projects across open science hardware, local biotech "
+        "capacity building, enzyme manufacturing and hands-on innovation programs."
+    ),
+    "stats": [
+        {"label": "Featured projects", "value": "3"},
+        {"label": "Students trained", "value": "200+"},
+        {"label": "Partner institutions", "value": "6+"},
+    ],
+    "filters": ["All", "Open Science", "Innovation"],
+}
+
 PROJECTS_DATA: List[Dict[str, object]] = [
     {
         "id": "ecb4osh",
@@ -121,6 +136,7 @@ PROJECTS_DATA: List[Dict[str, object]] = [
 TRAINING_PROGRAMS_DATA: List[Dict[str, object]] = [
     {
         "id": "training-microbiology",
+        "slug": "microbiology",
         "title": "Microbiology Training",
         "description": (
             "Essential aseptic techniques, culturing, sampling, media preparation, staining and "
@@ -163,6 +179,7 @@ TRAINING_PROGRAMS_DATA: List[Dict[str, object]] = [
     },
     {
         "id": "training-molecular-biology",
+        "slug": "molecular-biology",
         "title": "Molecular Biology & Genetic Engineering",
         "description": (
             "DNA extraction, PCR, gel electrophoresis, plasmid design and gene expression analysis for "
@@ -205,6 +222,7 @@ TRAINING_PROGRAMS_DATA: List[Dict[str, object]] = [
     },
     {
         "id": "training-bioinformatics",
+        "slug": "bioinformatics",
         "title": "Bioinformatics & Data Analysis",
         "description": (
             "DNA sequence analysis, antimicrobial resistance tracking, blending coding and biology to solve "
@@ -246,6 +264,7 @@ TRAINING_PROGRAMS_DATA: List[Dict[str, object]] = [
     },
     {
         "id": "training-synthetic-biology",
+        "slug": "synthetic-biology",
         "title": "Synthetic Biology & Biomaker",
         "description": (
             "Design biotech solutions using open-source tools, DIY lab equipment and local materials for sustainable innovation."
@@ -284,3 +303,44 @@ TRAINING_PROGRAMS_DATA: List[Dict[str, object]] = [
         },
     },
 ]
+
+TRAINING_PAGE_DATA: Dict[str, object] = {
+    "title": "Training",
+    "eyebrow": "Practical biotech education",
+    "description": (
+        "Hands-on programs for students, researchers and innovators who want to "
+        "build practical capacity in microbiology, molecular biology, "
+        "bioinformatics and synthetic biology."
+    ),
+    "stats": [
+        {"label": "Training tracks", "value": "4"},
+        {"label": "Learning mode", "value": "Hands-on"},
+        {"label": "Certificates", "value": "Available"},
+    ],
+    "applicationSteps": [
+        "Choose the training track that matches your goals.",
+        "Submit your contact details, background and learning objectives.",
+        "Hive Biolab follows up with cohort timing, requirements and next steps.",
+    ],
+}
+
+CONTACT_PAGE_DATA: Dict[str, object] = {
+    "title": "Contact",
+    "eyebrow": "Work with Hive Biolab",
+    "description": (
+        "Reach out for training inquiries, research collaborations, lab access, "
+        "open science partnerships and community biotechnology programs."
+    ),
+    "contact": {
+        "email": "biolab@kumasihive.com",
+        "location": "Kumasi Hive, Kumasi, Ghana",
+        "responseTime": "We typically respond within 2 business days.",
+    },
+    "inquiryTypes": [
+        "Training inquiry",
+        "Research collaboration",
+        "Lab access",
+        "Open science partnership",
+        "General inquiry",
+    ],
+}

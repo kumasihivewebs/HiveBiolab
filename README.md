@@ -69,7 +69,7 @@ This Django service implements the API surface that `hive-bio` reaches out to wh
 
 ## API endpoints
 
-Use the JSON payloads below when the Vite app submits data. All endpoints accept `POST` only, return JSON, and respond with `detail` plus the created record `id`.
+Use the JSON payloads below when the Vite app reads page content or submits data. All endpoints return JSON. Form endpoints respond with `detail` plus the created record `id`.
 
 ### `GET /health/`
 
@@ -122,6 +122,105 @@ Response:
 {
   "detail": "Thanks for reaching out! We will respond as soon as possible.",
   "message_id": 1
+}
+```
+
+### `GET /api/contact/`
+
+Response:
+
+```json
+{
+  "page": {
+    "title": "Contact",
+    "contact": {
+      "email": "biolab@kumasihive.com",
+      "location": "Kumasi Hive, Kumasi, Ghana"
+    },
+    "inquiryTypes": ["Training inquiry", "Research collaboration"]
+  }
+}
+```
+
+### `GET /api/projects/`
+
+Response:
+
+```json
+{
+  "page": {
+    "title": "Projects"
+  },
+  "projects": [
+    {
+      "id": "ecb4osh",
+      "slug": "ecb4osh-project",
+      "title": "ECB4OSH Project"
+    }
+  ]
+}
+```
+
+### `GET /api/projects/<slug>/`
+
+Response:
+
+```json
+{
+  "project": {
+    "id": "ecb4osh",
+    "slug": "ecb4osh-project",
+    "title": "ECB4OSH Project"
+  }
+}
+```
+
+### `GET /api/training/`
+
+Response:
+
+```json
+{
+  "page": {
+    "title": "Training"
+  },
+  "programs": [
+    {
+      "id": "training-microbiology",
+      "slug": "microbiology",
+      "title": "Microbiology Training"
+    }
+  ]
+}
+```
+
+### `GET /api/training/programs/`
+
+Response:
+
+```json
+{
+  "programs": [
+    {
+      "id": "training-microbiology",
+      "slug": "microbiology",
+      "title": "Microbiology Training"
+    }
+  ]
+}
+```
+
+### `GET /api/training/programs/<slug>/`
+
+Response:
+
+```json
+{
+  "program": {
+    "id": "training-molecular-biology",
+    "slug": "molecular-biology",
+    "title": "Molecular Biology & Genetic Engineering"
+  }
 }
 ```
 

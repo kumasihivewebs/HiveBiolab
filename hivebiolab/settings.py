@@ -31,12 +31,11 @@ SECRET_KEY = config("SECRET_KEY", default="django-insecure-local-only")
 DEBUG = config_bool("DEBUG", default=False)
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
-DEFAULT_ALLOWED_HOSTS = "127.0.0.1 localhost"
 ALLOWED_HOSTS = [
     host.strip()
     for host in config(
         "ALLOWED_HOSTS",
-        default=f"{DEFAULT_ALLOWED_HOSTS} api.biolab.kumasihive.com",
+        default=f"api.biolab.kumasihive.com",
     )
     .replace(",", " ")
     .split()
@@ -50,7 +49,7 @@ ALLOWED_HOSTS = [
 
 FRONTEND_ORIGINS_SETTING = config(
     "FRONTEND_ORIGINS",
-    "http://localhost:8080 http://127.0.0.1:8080 https://biolab.kumasihive.com",
+    "https://biolab.kumasihive.com",
 ).strip()
 
 ALLOW_ALL_ORIGINS = FRONTEND_ORIGINS_SETTING == "*"

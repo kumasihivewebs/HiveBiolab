@@ -11,6 +11,14 @@ class ContactAPITests(TestCase):
         self.client = Client()
         self.url = reverse("contact_submit")
 
+    def test_contact_page_content_success(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["page"]["title"], "Contact")
+        self.assertIn("contact", payload["page"])
+
     def test_submit_message_success(self):
         payload = {
             "name": "Ada Bio",
