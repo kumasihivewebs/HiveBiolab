@@ -91,7 +91,7 @@ class ProjectUpload(models.Model):
         related_name="uploads",
     )
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to="projects/uploads/")
+    file = models.FileField(upload_to="projects/uploads/", max_length=500)
     upload_type = models.CharField(
         max_length=32,
         choices=UploadType.choices,
@@ -114,7 +114,7 @@ class TrainingProgram(models.Model):
     description = models.TextField()
     level = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
-    image = models.ImageField(upload_to="training-programs/", blank=True)
+    image = models.ImageField(upload_to="training-programs/", max_length=500, blank=True)
     image_key = models.CharField(max_length=255, blank=True)
     icon_name = models.CharField(max_length=255, blank=True)
     route = models.CharField(max_length=255, blank=True)
@@ -150,7 +150,7 @@ class TrainingProgramUpload(models.Model):
         related_name="uploads",
     )
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to="training-programs/uploads/")
+    file = models.FileField(upload_to="training-programs/uploads/", max_length=500)
     upload_type = models.CharField(
         max_length=32,
         choices=UploadType.choices,
