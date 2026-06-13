@@ -3,6 +3,8 @@ import json
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from content.models import PageContent
+
 from .models import ContactMessage
 
 
@@ -10,13 +12,21 @@ class ContactAPITests(TestCase):
     def setUp(self):
         self.client = Client()
         self.url = reverse("contact_submit")
+        PageContent.objects.create(
+            key=PageContent.PageKey.CONTACT,
+            title="Contact from admin",
+            eyebrow="Reach us",
+            description="Admin-managed contact page copy.",
+            contact={"email": "biolab@example.com"},
+            inquiry_types=["Training inquiry"],
+        )
 
     def test_contact_page_content_success(self):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["page"]["title"], "Contact")
+        self.assertEqual(payload["page"]["title"], "Contact from admin")
         self.assertIn("contact", payload["page"])
 
     def test_submit_message_success(self):

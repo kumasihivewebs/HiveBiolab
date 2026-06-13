@@ -3,17 +3,124 @@ from django.db.utils import DatabaseError
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 
+from content.models import PageContent, Project, TrainingProgram
+
 from .api_helpers import json_error
-from .content_data import (
-    PROJECTS_DATA,
-    PROJECTS_PAGE_DATA,
-    TRAINING_PAGE_DATA,
-    TRAINING_PROGRAMS_DATA,
-)
 
 
-def _find_by_slug(items, slug):
-    return next((item for item in items if item.get("slug") == slug), None)
+def _file_url(request, file_field):
+    if not file_field:
+        return ""
+
+    try:
+        url = file_field.url
+    except ValueError:
+        return ""
+
+    if url.startswith(("http://", "https://")):
+        return url
+
+    return request.build_absolute_uri(url)
+
+
+def _uploads_payload(request, uploads):
+    return [
+        {
+            "title": upload.title,
+            "url": _file_url(request, upload.file),
+            "type": upload.upload_type,
+        }
+        for upload in uploads
+        if upload.is_public
+    ]
+
+
+def _page_payload(key):
+    page = PageContent.objects.filter(key=key).first()
+    if page is None:
+        return {}
+
+    payload = {
+        "title": page.title,
+        "eyebrow": page.eyebrow,
+        "description": page.description,
+    }
+
+    if page.stats:
+        payload["stats"] = page.stats
+    if page.filters:
+        payload["filters"] = page.filters
+    if page.application_steps:
+        payload["applicationSteps"] = page.application_steps
+    if page.contact:
+        payload["contact"] = page.contact
+    if page.inquiry_types:
+        payload["inquiryTypes"] = page.inquiry_types
+
+    return payload
+
+
+def _project_payload(request, project):
+    links = {
+        key: value
+        for key, value in {
+            "github": project.github_url,
+            "website": project.website_url,
+            "publication": project.publication_url,
+        }.items()
+        if value
+    }
+
+    payload = {
+        "id": str(project.pk),
+        "title": project.title,
+        "slug": project.slug,
+        "description": project.description,
+        "longDescription": project.long_description,
+        "status": project.status,
+        "category": project.category,
+        "tags": project.tags,
+        "startDate": project.start_date.isoformat() if project.start_date else "",
+        "endDate": project.end_date.isoformat() if project.end_date else "",
+        "image": _file_url(request, project.image),
+        "image_url": _file_url(request, project.image),
+        "image_key": project.image_key,
+        "uploads": _uploads_payload(request, project.uploads.all()),
+        "gallery": project.gallery,
+        "team": project.team,
+        "collaborators": project.collaborators,
+        "funding": project.funding,
+        "impact": project.impact,
+        "route": project.route,
+        "links": links,
+    }
+    return payload
+
+
+def _training_program_payload(request, program):
+    return {
+        "id": str(program.pk),
+        "slug": program.slug,
+        "title": program.title,
+        "description": program.description,
+        "level": program.level,
+        "color": program.color,
+        "image": _file_url(request, program.image),
+        "image_url": _file_url(request, program.image),
+        "image_key": program.image_key,
+        "uploads": _uploads_payload(request, program.uploads.all()),
+        "icon_name": program.icon_name,
+        "route": program.route,
+        "details": {
+            "overview": program.overview,
+            "curriculum": program.curriculum,
+            "prerequisites": program.prerequisites,
+            "outcomes": program.outcomes,
+            "duration": program.duration,
+            "format": program.format,
+            "certification": program.certification,
+        },
+    }
 
 
 @require_GET
@@ -28,39 +135,60 @@ def health_check(request):
 
 @require_GET
 def list_projects(request):
-    """Return the curated list of Hive Biolab projects."""
-    return JsonResponse({"page": PROJECTS_PAGE_DATA, "projects": PROJECTS_DATA})
+    """Return admin-managed Hive Biolab projects."""
+    projects = Project.objects.filter(is_published=True)
+    return JsonResponse(
+        {
+            "page": _page_payload(PageContent.PageKey.PROJECTS),
+            "projects": [_project_payload(request, project) for project in projects],
+        }
+    )
 
 
 @require_GET
 def retrieve_project(request, slug):
-    """Return a single Hive Biolab project by slug."""
-    project = _find_by_slug(PROJECTS_DATA, slug)
-    if project is None:
+    """Return a single admin-managed Hive Biolab project by slug."""
+    try:
+        project = Project.objects.get(slug=slug, is_published=True)
+    except Project.DoesNotExist:
         return json_error("Project not found.", status=404)
 
-    return JsonResponse({"project": project})
+    return JsonResponse({"project": _project_payload(request, project)})
 
 
 @require_GET
 def training_page(request):
-    """Return the training page content and program catalog."""
+    """Return admin-managed training page content and program catalog."""
+    programs = TrainingProgram.objects.filter(is_published=True)
     return JsonResponse(
-        {"page": TRAINING_PAGE_DATA, "programs": TRAINING_PROGRAMS_DATA}
+        {
+            "page": _page_payload(PageContent.PageKey.TRAINING),
+            "programs": [
+                _training_program_payload(request, program) for program in programs
+            ],
+        }
     )
 
 
 @require_GET
 def list_training_programs(request):
-    """Return the catalog of training programs we offer."""
-    return JsonResponse({"programs": TRAINING_PROGRAMS_DATA})
+    """Return admin-managed training programs."""
+    programs = TrainingProgram.objects.filter(is_published=True)
+    return JsonResponse(
+        {
+            "programs": [
+                _training_program_payload(request, program) for program in programs
+            ]
+        }
+    )
 
 
 @require_GET
 def retrieve_training_program(request, slug):
-    """Return a single training program by slug."""
-    program = _find_by_slug(TRAINING_PROGRAMS_DATA, slug)
-    if program is None:
+    """Return a single admin-managed training program by slug."""
+    try:
+        program = TrainingProgram.objects.get(slug=slug, is_published=True)
+    except TrainingProgram.DoesNotExist:
         return json_error("Training program not found.", status=404)
 
-    return JsonResponse({"program": program})
+    return JsonResponse({"program": _training_program_payload(request, program)})

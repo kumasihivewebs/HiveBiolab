@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from content.models import PageContent, Project, TrainingProgram
+
 
 class HealthCheckTests(TestCase):
     def test_health_check_reports_ok(self):
@@ -11,21 +13,54 @@ class HealthCheckTests(TestCase):
 
 
 class PageContentAPITests(TestCase):
+    def setUp(self):
+        self.projects_page = PageContent.objects.create(
+            key=PageContent.PageKey.PROJECTS,
+            title="Projects from admin",
+            eyebrow="Managed content",
+            description="Admin-managed project page copy.",
+            stats=[{"label": "Projects", "value": "1"}],
+        )
+        self.training_page = PageContent.objects.create(
+            key=PageContent.PageKey.TRAINING,
+            title="Training from admin",
+            eyebrow="Managed training",
+            description="Admin-managed training page copy.",
+            stats=[{"label": "Tracks", "value": "1"}],
+            application_steps=["Apply", "Confirm", "Attend"],
+        )
+        self.project = Project.objects.create(
+            title="Admin Project",
+            slug="admin-project",
+            description="A project created through the admin.",
+            status=Project.Status.ACTIVE,
+            category="Open Science",
+            route="/projects/admin-project",
+        )
+        self.program = TrainingProgram.objects.create(
+            title="Admin Training Program",
+            slug="admin-training-program",
+            description="A training program created through the admin.",
+            level="Beginner",
+            route="/training/admin-training-program",
+            curriculum=["Lab safety", "Practical session"],
+        )
+
     def test_projects_list_includes_page_content(self):
         response = self.client.get(reverse("projects_list"))
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["page"]["title"], "Projects")
-        self.assertGreaterEqual(len(payload["projects"]), 1)
+        self.assertEqual(payload["page"]["title"], "Projects from admin")
+        self.assertEqual(payload["projects"][0]["slug"], "admin-project")
 
     def test_project_detail_uses_slug(self):
         response = self.client.get(
-            reverse("project_detail", kwargs={"slug": "ecb4osh-project"})
+            reverse("project_detail", kwargs={"slug": "admin-project"})
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["project"]["id"], "ecb4osh")
+        self.assertEqual(response.json()["project"]["id"], str(self.project.pk))
 
     def test_unknown_project_returns_404(self):
         response = self.client.get(
@@ -39,21 +74,19 @@ class PageContentAPITests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["page"]["title"], "Training")
-        self.assertGreaterEqual(len(payload["programs"]), 1)
+        self.assertEqual(payload["page"]["title"], "Training from admin")
+        self.assertEqual(payload["programs"][0]["slug"], "admin-training-program")
 
     def test_training_program_detail_uses_slug(self):
         response = self.client.get(
             reverse(
                 "training_program_detail",
-                kwargs={"slug": "molecular-biology"},
+                kwargs={"slug": "admin-training-program"},
             )
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json()["program"]["id"], "training-molecular-biology"
-        )
+        self.assertEqual(response.json()["program"]["id"], str(self.program.pk))
 
     def test_unknown_training_program_returns_404(self):
         response = self.client.get(
