@@ -341,8 +341,11 @@ JAZZMIN_SETTINGS = {
         "content.TrainingProgram": "fas fa-chalkboard-teacher",
         "content.PageContent": "fas fa-file-alt",
         "training": "fas fa-microscope",
+        "training.TrainingRegistration": "fas fa-clipboard-list",
         "newsletter": "fas fa-envelope-open-text",
+        "newsletter.NewsletterSubscriber": "fas fa-paper-plane",
         "contact": "fas fa-comments",
+        "contact.ContactMessage": "fas fa-comment-dots",
         "auth.User": "fas fa-user",
     },
 }
