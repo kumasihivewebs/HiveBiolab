@@ -62,6 +62,39 @@ class PageContentAPITests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["project"]["id"], str(self.project.pk))
 
+    def test_project_image_returns_stored_cloudinary_url_once(self):
+        cloudinary_url = (
+            "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "f_auto,q_auto/projects/MG_0391_lxakcg"
+        )
+        self.project.image.name = cloudinary_url
+        self.project.save(update_fields=["image"])
+
+        response = self.client.get(
+            reverse("project_detail", kwargs={"slug": "admin-project"})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["project"]["image"], cloudinary_url)
+
+    def test_project_image_repairs_double_prefixed_cloudinary_url(self):
+        cloudinary_url = (
+            "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "f_auto,q_auto/projects/MG_0391_lxakcg"
+        )
+        self.project.image.name = (
+            "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+            f"f_auto,q_auto/{cloudinary_url}"
+        )
+        self.project.save(update_fields=["image"])
+
+        response = self.client.get(
+            reverse("project_detail", kwargs={"slug": "admin-project"})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["project"]["image"], cloudinary_url)
+
     def test_unknown_project_returns_404(self):
         response = self.client.get(
             reverse("project_detail", kwargs={"slug": "missing-project"})

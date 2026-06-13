@@ -55,7 +55,7 @@ class Project(models.Model):
     tags = models.JSONField(default=list_default, blank=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
-    image = models.ImageField(upload_to="projects/", blank=True)
+    image = models.ImageField(upload_to="projects/", max_length=500, blank=True)
     image_key = models.CharField(max_length=255, blank=True)
     gallery = models.JSONField(default=list_default, blank=True)
     team = models.JSONField(default=list_default, blank=True)

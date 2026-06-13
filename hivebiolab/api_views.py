@@ -8,17 +8,49 @@ from content.models import PageContent, Project, TrainingProgram
 from .api_helpers import json_error
 
 
+def _normalized_absolute_file_url(value):
+    value = str(value or "").strip()
+    if not value:
+        return ""
+
+    for marker in (
+        "https:/res.cloudinary.com/",
+        "http:/res.cloudinary.com/",
+        "https://res.cloudinary.com/",
+        "http://res.cloudinary.com/",
+    ):
+        index = value.rfind(marker)
+        if index > 0:
+            value = value[index:]
+            break
+
+    value = value.replace("https:/res.cloudinary.com/", "https://res.cloudinary.com/")
+    value = value.replace("http:/res.cloudinary.com/", "http://res.cloudinary.com/")
+
+    if value.startswith(("http://", "https://")):
+        return value
+
+    return ""
+
+
 def _file_url(request, file_field):
     if not file_field:
         return ""
+
+    absolute_name_url = _normalized_absolute_file_url(
+        getattr(file_field, "name", "")
+    )
+    if absolute_name_url:
+        return absolute_name_url
 
     try:
         url = file_field.url
     except ValueError:
         return ""
 
-    if url.startswith(("http://", "https://")):
-        return url
+    absolute_url = _normalized_absolute_file_url(url)
+    if absolute_url:
+        return absolute_url
 
     return request.build_absolute_uri(url)
 
