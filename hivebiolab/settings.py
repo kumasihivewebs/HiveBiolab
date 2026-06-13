@@ -43,7 +43,7 @@ DEBUG = config_bool("DEBUG", default=False)
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 BUILDING = config_bool("DJANGO_BUILD", default=False)
 
-ALLOWED_HOSTS = config_list("ALLOWED_HOSTS", default="api.biolab.kumasihive.com")
+ALLOWED_HOSTS = config_list("ALLOWED_HOSTS", default="biolab-api.kumasihive.com")
 
 
 # ─────────────────────────────
@@ -52,13 +52,13 @@ ALLOWED_HOSTS = config_list("ALLOWED_HOSTS", default="api.biolab.kumasihive.com"
 
 FRONTEND_ORIGINS_SETTING = config(
     "FRONTEND_ORIGINS",
-    "https://biolab.kumasihive.com",
+    "https://biolab.kumasihive.com https://www.biolab.kumasihive.com",
 ).strip()
 
 ALLOW_ALL_ORIGINS = FRONTEND_ORIGINS_SETTING == "*"
 FRONTEND_ORIGINS = config_list(
     "FRONTEND_ORIGINS",
-    default="https://biolab.kumasihive.com",
+    default="https://biolab.kumasihive.com https://www.biolab.kumasihive.com",
 )
 
 CORS_ALLOW_CREDENTIALS = True
@@ -284,22 +284,16 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
-        "file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "debug.log"),
-            "formatter": "verbose",
-        },
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "handlers": ["console"],
+            "level": config("DJANGO_LOG_LEVEL", default="INFO"),
             "propagate": True,
         },
         "newsletter.views": {
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "handlers": ["console"],
+            "level": config("DJANGO_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
     },

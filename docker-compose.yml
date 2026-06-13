@@ -23,7 +23,7 @@ services:
 
   api:
     build: .
-    container_name: hivebiolab-api
+    container_name: biolab-api
     command: >
       sh -c "python manage.py migrate --noinput &&
              gunicorn hivebiolab.wsgi:application
@@ -39,6 +39,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-biolab_dev_password_change_me}
       DB_HOST: db
       DB_PORT: 5432
+      GUNICORN_CMD_ARGS: "--bind=0.0.0.0:8002 --workers=3 --timeout=120"
 
     depends_on:
       db:
@@ -46,7 +47,7 @@ services:
 
     restart: unless-stopped
     ports:
-      - "8002:8002"
+      - "127.0.0.1:8002:8002"
 
     volumes:
       - .:/app

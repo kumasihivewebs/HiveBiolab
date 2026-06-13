@@ -1,21 +1,32 @@
 FROM python:3.12-slim
 
-ENV PYTHONUNBUFFERED=1
-
-RUN apt-get update && apt-get install -y gcc libpq-dev
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=hivebiolab.settings
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
+# Dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+# App source
 COPY . .
 
-RUN chmod +x build.sh && ./build.sh
+# Entrypoint
+RUN chmod +x /app/entrypoint.sh
 
-EXPOSE 8001
+EXPOSE 8002
 
-CMD ["gunicorn", "hivebiolab.wsgi:application", \
-     "-b", "0.0.0.0:8002", \
-     "--workers", "3", \
-     "--timeout", "120"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Production server (better than Daphne for scaling)
+CMD ["gunicorn", "hivebiolab.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8002", "--workers", "3", "--timeout", "60"]
