@@ -235,7 +235,7 @@ CLOUDINARY_STORAGE = {
 
 # Static files
 MEDIA_URL = (
-    f"https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/biolab/upload/f_auto,q_auto/"
+    f"https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/"
     if CLOUDINARY_CLOUD_NAME
     else "/media/"
 )
