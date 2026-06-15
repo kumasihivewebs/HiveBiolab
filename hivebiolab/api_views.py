@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit, urlunsplit
+
 from django.db import connections
 from django.db.utils import DatabaseError
 from django.http import JsonResponse
@@ -27,10 +29,16 @@ def _normalized_absolute_file_url(value):
     value = value.replace("https:/res.cloudinary.com/", "https://res.cloudinary.com/")
     value = value.replace("http:/res.cloudinary.com/", "http://res.cloudinary.com/")
 
-    if value.startswith(("http://", "https://")):
-        return value
+    if not value.startswith(("http://", "https://")):
+        return ""
 
-    return ""
+    parsed = urlsplit(value)
+    if parsed.netloc == "res.cloudinary.com":
+        path = parsed.path.replace("/image/upload/f_auto,q_auto/", "/image/upload/")
+        path = path.replace("/image/upload/q_auto,f_auto/", "/image/upload/")
+        value = urlunsplit(parsed._replace(path=path))
+
+    return value
 
 
 def _file_url(request, file_field):
@@ -53,6 +61,28 @@ def _file_url(request, file_field):
         return absolute_url
 
     return request.build_absolute_uri(url)
+
+
+def _legacy_transformed_cloudinary_url(value):
+    parsed = urlsplit(str(value or ""))
+    return (
+        parsed.netloc == "res.cloudinary.com"
+        and (
+            "/image/upload/f_auto,q_auto/" in parsed.path
+            or "/image/upload/q_auto,f_auto/" in parsed.path
+        )
+    )
+
+
+def _public_file_url(request, file_field):
+    if not file_field:
+        return ""
+
+    stored_name = getattr(file_field, "name", "")
+    if _legacy_transformed_cloudinary_url(stored_name):
+        return ""
+
+    return _file_url(request, file_field)
 
 
 def _uploads_payload(request, uploads):
@@ -114,8 +144,8 @@ def _project_payload(request, project):
         "tags": project.tags,
         "startDate": project.start_date.isoformat() if project.start_date else "",
         "endDate": project.end_date.isoformat() if project.end_date else "",
-        "image": _file_url(request, project.image),
-        "image_url": _file_url(request, project.image),
+        "image": _public_file_url(request, project.image),
+        "image_url": _public_file_url(request, project.image),
         "image_key": project.image_key,
         "uploads": _uploads_payload(request, project.uploads.all()),
         "gallery": project.gallery,
@@ -137,8 +167,8 @@ def _training_program_payload(request, program):
         "description": program.description,
         "level": program.level,
         "color": program.color,
-        "image": _file_url(request, program.image),
-        "image_url": _file_url(request, program.image),
+        "image": _public_file_url(request, program.image),
+        "image_url": _public_file_url(request, program.image),
         "image_key": program.image_key,
         "uploads": _uploads_payload(request, program.uploads.all()),
         "icon_name": program.icon_name,
