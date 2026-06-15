@@ -95,6 +95,47 @@ class PageContentAPITests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["project"]["image"], "")
 
+    def test_project_image_url_repairs_pasted_cloudinary_delivery_url(self):
+        self.project.image_url = (
+            "https://res.cloudinary.com/kumasihivewebsite/image/upload/v1781390828/"
+            "https:/res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "f_auto%2Cq_auto/projects/IMG_5612-scaled_jdvndj.jpg"
+        )
+        self.project.save(update_fields=["image_url"])
+
+        response = self.client.get(
+            reverse("project_detail", kwargs={"slug": "admin-project"})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["project"]["image"],
+            (
+                "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+                "projects/IMG_5612-scaled_jdvndj.jpg"
+            ),
+        )
+
+    def test_project_image_url_repairs_separately_pasted_transformed_url(self):
+        self.project.image_url = (
+            "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "f_auto,q_auto/projects/IMG_5612-scaled_jdvndj.jpg"
+        )
+        self.project.save(update_fields=["image_url"])
+
+        response = self.client.get(
+            reverse("project_detail", kwargs={"slug": "admin-project"})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["project"]["image"],
+            (
+                "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+                "projects/IMG_5612-scaled_jdvndj.jpg"
+            ),
+        )
+
     def test_unknown_project_returns_404(self):
         response = self.client.get(
             reverse("project_detail", kwargs={"slug": "missing-project"})

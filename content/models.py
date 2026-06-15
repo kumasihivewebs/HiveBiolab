@@ -56,6 +56,12 @@ class Project(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     image = models.ImageField(upload_to="projects/", max_length=500, blank=True)
+    image_url = models.URLField(
+        "image URL",
+        max_length=1000,
+        blank=True,
+        help_text="Optional external image URL, for example a Cloudinary delivery URL.",
+    )
     image_key = models.CharField(max_length=255, blank=True)
     gallery = models.JSONField(default=list_default, blank=True)
     team = models.JSONField(default=list_default, blank=True)
@@ -115,6 +121,12 @@ class TrainingProgram(models.Model):
     level = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
     image = models.ImageField(upload_to="training-programs/", max_length=500, blank=True)
+    image_url = models.URLField(
+        "image URL",
+        max_length=1000,
+        blank=True,
+        help_text="Optional external image URL, for example a Cloudinary delivery URL.",
+    )
     image_key = models.CharField(max_length=255, blank=True)
     icon_name = models.CharField(max_length=255, blank=True)
     route = models.CharField(max_length=255, blank=True)

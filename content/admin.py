@@ -66,6 +66,7 @@ class ProjectAdmin(admin.ModelAdmin):
                     "status",
                     "category",
                     "image",
+                    "image_url",
                     "is_published",
                     "sort_order",
                 )
@@ -104,6 +105,7 @@ class TrainingProgramAdmin(admin.ModelAdmin):
                     "description",
                     "level",
                     "image",
+                    "image_url",
                     "icon_name",
                     "route",
                     "is_published",
