@@ -235,10 +235,11 @@ CLOUDINARY_STORAGE = {
 
 # Static files
 MEDIA_URL = (
-    f"https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/"
-    if CLOUDINARY_CLOUD_NAME
+    f"https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/image/upload/"
+    if CLOUDINARY_CONFIGURED
     else "/media/"
 )
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_DIR = BASE_DIR / "static"
