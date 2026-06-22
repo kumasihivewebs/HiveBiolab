@@ -138,6 +138,25 @@ class PageContentAPITests(TestCase):
             ),
         )
 
+    def test_project_image_field_takes_priority_over_legacy_image_url(self):
+        self.project.image.name = "projects/IMG_5612-scaled_jdvndj"
+        self.project.image_url = (
+            "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "https:/res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "f_auto%2Cq_auto/projects/bad_legacy_value.jpg"
+        )
+        self.project.save(update_fields=["image", "image_url"])
+
+        response = self.client.get(
+            reverse("project_detail", kwargs={"slug": "admin-project"})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "projects/IMG_5612-scaled_jdvndj",
+            response.json()["project"]["image"],
+        )
+
     def test_unknown_project_returns_404(self):
         response = self.client.get(
             reverse("project_detail", kwargs={"slug": "missing-project"})
@@ -182,6 +201,28 @@ class PageContentAPITests(TestCase):
         self.assertEqual(payload["registrationStatus"], "ongoing")
         self.assertFalse(payload["registrationOpen"])
         self.assertFalse(payload["acceptingRegistrations"])
+
+    def test_training_program_image_field_takes_priority_over_legacy_image_url(self):
+        self.program.image.name = "training-programs/program-image"
+        self.program.image_url = (
+            "https://res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "https:/res.cloudinary.com/kumasihivewebsite/image/upload/"
+            "f_auto%2Cq_auto/training-programs/bad_legacy_value.jpg"
+        )
+        self.program.save(update_fields=["image", "image_url"])
+
+        response = self.client.get(
+            reverse(
+                "training_program_detail",
+                kwargs={"slug": "admin-training-program"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "training-programs/program-image",
+            response.json()["program"]["image"],
+        )
 
     def test_unknown_training_program_returns_404(self):
         response = self.client.get(

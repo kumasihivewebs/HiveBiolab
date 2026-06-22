@@ -91,11 +91,15 @@ def _public_file_url(request, file_field):
 
 
 def _image_url(request, external_url, file_field):
+    primary_file_url = _public_file_url(request, file_field)
+    if primary_file_url:
+        return primary_file_url
+
     normalized_external_url = _normalized_absolute_file_url(external_url)
     if normalized_external_url:
         return normalized_external_url
 
-    return _public_file_url(request, file_field)
+    return ""
 
 
 def _uploads_payload(request, uploads):

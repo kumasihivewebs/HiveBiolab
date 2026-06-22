@@ -1,3 +1,4 @@
+from cloudinary.models import CloudinaryField
 from django.db import models
 from django.utils import timezone
 
@@ -56,7 +57,7 @@ class Project(models.Model):
     tags = models.JSONField(default=list_default, blank=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
-    image = models.ImageField(upload_to="projects/", max_length=500, blank=True)
+    image = CloudinaryField("image", blank=True, null=True)
     image_url = models.URLField(
         "image URL",
         max_length=1000,
@@ -98,7 +99,7 @@ class ProjectUpload(models.Model):
         related_name="uploads",
     )
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to="projects/uploads/", max_length=500)
+    file = CloudinaryField("file", resource_type="auto", blank=True, null=True)
     upload_type = models.CharField(
         max_length=32,
         choices=UploadType.choices,
@@ -121,7 +122,7 @@ class TrainingProgram(models.Model):
     description = models.TextField()
     level = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
-    image = models.ImageField(upload_to="training-programs/", max_length=500, blank=True)
+    image = CloudinaryField("image", blank=True, null=True)
     image_url = models.URLField(
         "image URL",
         max_length=1000,
@@ -180,7 +181,7 @@ class TrainingProgramUpload(models.Model):
         related_name="uploads",
     )
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to="training-programs/uploads/", max_length=500)
+    file = CloudinaryField("file", resource_type="auto", blank=True, null=True)
     upload_type = models.CharField(
         max_length=32,
         choices=UploadType.choices,
