@@ -42,14 +42,14 @@ class PageContentAdmin(admin.ModelAdmin):
 class ProjectUploadInline(admin.TabularInline):
     model = ProjectUpload
     extra = 1
-    fields = ("title", "file", "upload_type", "is_public", "sort_order")
+    fields = ("title", "file", "upload_type", "is_public")
 
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     inlines = (ProjectUploadInline,)
-    list_display = ("title", "status", "category", "is_published", "sort_order")
-    list_editable = ("is_published", "sort_order")
+    list_display = ("title", "status", "category", "is_published")
+    list_editable = ("is_published",)
     list_filter = ("status", "category", "is_published")
     search_fields = ("title", "description", "long_description", "category")
     prepopulated_fields = {"slug": ("title",)}
@@ -68,7 +68,6 @@ class ProjectAdmin(admin.ModelAdmin):
                     "image",
                     "image_url",
                     "is_published",
-                    "sort_order",
                 )
             },
         ),
@@ -83,14 +82,14 @@ class ProjectAdmin(admin.ModelAdmin):
 class TrainingProgramUploadInline(admin.TabularInline):
     model = TrainingProgramUpload
     extra = 1
-    fields = ("title", "file", "upload_type", "is_public", "sort_order")
+    fields = ("title", "file", "upload_type", "is_public")
 
 
 @admin.register(TrainingProgram)
 class TrainingProgramAdmin(admin.ModelAdmin):
     inlines = (TrainingProgramUploadInline,)
-    list_display = ("title", "level", "is_published", "sort_order")
-    list_editable = ("is_published", "sort_order")
+    list_display = ("title", "level", "is_published")
+    list_editable = ("is_published",)
     list_filter = ("level", "is_published")
     search_fields = ("title", "description", "overview", "curriculum")
     prepopulated_fields = {"slug": ("title",)}
@@ -109,7 +108,6 @@ class TrainingProgramAdmin(admin.ModelAdmin):
                     "icon_name",
                     "route",
                     "is_published",
-                    "sort_order",
                 )
             },
         ),
