@@ -107,6 +107,9 @@ class TrainingProgramAdmin(admin.ModelAdmin):
                     "image_url",
                     "icon_name",
                     "route",
+                    "start_date",
+                    "end_date",
+                    "registration_open",
                     "is_published",
                 )
             },

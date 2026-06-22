@@ -186,6 +186,11 @@ def _training_program_payload(request, program):
         "uploads": _uploads_payload(request, program.uploads.all()),
         "icon_name": program.icon_name,
         "route": program.route,
+        "startDate": program.start_date.isoformat() if program.start_date else "",
+        "endDate": program.end_date.isoformat() if program.end_date else "",
+        "registrationOpen": program.registration_open,
+        "registrationStatus": program.schedule_status,
+        "acceptingRegistrations": program.accepting_registrations,
         "details": {
             "overview": program.overview,
             "curriculum": program.curriculum,

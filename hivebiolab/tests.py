@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from content.models import PageContent, Project, TrainingProgram
 
@@ -44,6 +45,7 @@ class PageContentAPITests(TestCase):
             level="Beginner",
             route="/training/admin-training-program",
             curriculum=["Lab safety", "Practical session"],
+            registration_open=True,
         )
 
     def test_projects_list_includes_page_content(self):
@@ -161,6 +163,25 @@ class PageContentAPITests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["program"]["id"], str(self.program.pk))
+
+    def test_training_program_detail_includes_schedule_state(self):
+        self.program.start_date = timezone.localdate()
+        self.program.end_date = timezone.localdate()
+        self.program.registration_open = False
+        self.program.save(update_fields=["start_date", "end_date", "registration_open"])
+
+        response = self.client.get(
+            reverse(
+                "training_program_detail",
+                kwargs={"slug": "admin-training-program"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()["program"]
+        self.assertEqual(payload["registrationStatus"], "ongoing")
+        self.assertFalse(payload["registrationOpen"])
+        self.assertFalse(payload["acceptingRegistrations"])
 
     def test_unknown_training_program_returns_404(self):
         response = self.client.get(

@@ -11,6 +11,7 @@ from hivebiolab.api_helpers import (
     get_client_metadata,
 )
 
+from content.models import TrainingProgram
 from .models import TrainingRegistration
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,28 @@ def register_participant(request):
     full_name = (payload.get("full_name") or "").strip()
     email = (payload.get("email") or "").strip()
     program = (payload.get("program") or "").strip()
+    program_slug = (payload.get("program_slug") or "").strip()
 
     if not full_name or not email or not program:
         return json_error("Full name, email, and program choice are required.")
+
+    selected_program = None
+    if program_slug:
+        selected_program = TrainingProgram.objects.filter(
+            slug=program_slug,
+            is_published=True,
+        ).first()
+    else:
+        selected_program = TrainingProgram.objects.filter(
+            title=program,
+            is_published=True,
+        ).first()
+
+    if selected_program and not selected_program.accepting_registrations:
+        return json_error(
+            "Registrations for this training program are currently closed.",
+            status=400,
+        )
 
     metadata = get_client_metadata(request)
 

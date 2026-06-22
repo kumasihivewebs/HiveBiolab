@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 def list_default():
@@ -134,6 +135,9 @@ class TrainingProgram(models.Model):
     curriculum = models.JSONField(default=list_default, blank=True)
     prerequisites = models.TextField(blank=True)
     outcomes = models.TextField(blank=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    registration_open = models.BooleanField(default=True)
     duration = models.CharField(max_length=255, blank=True)
     format = models.CharField(max_length=255, blank=True)
     certification = models.CharField(max_length=255, blank=True)
@@ -147,6 +151,20 @@ class TrainingProgram(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def schedule_status(self):
+        today = timezone.localdate()
+
+        if self.end_date and self.end_date < today:
+            return "past"
+        if self.start_date and self.start_date > today:
+            return "upcoming"
+        return "ongoing"
+
+    @property
+    def accepting_registrations(self):
+        return self.registration_open and self.schedule_status != "past"
 
 
 class TrainingProgramUpload(models.Model):
