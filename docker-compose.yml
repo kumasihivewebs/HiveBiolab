@@ -24,7 +24,6 @@ services:
   api:
     build: .
     container_name: biolab-api
-    command: gunicorn hivebiolab.wsgi:application -b 0.0.0.0:8002 --workers 3 --timeout 120"
 
     env_file:
       - .env
