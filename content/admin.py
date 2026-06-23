@@ -117,6 +117,7 @@ class TrainingProgramAdmin(admin.ModelAdmin):
                     "start_date",
                     "end_date",
                     "registration_open",
+                    "registration_url",
                 )
             },
         ),

@@ -46,6 +46,7 @@ class PageContentAPITests(TestCase):
             route="/training/admin-training-program",
             curriculum=["Lab safety", "Practical session"],
             registration_open=True,
+            registration_url="https://example.com/register",
         )
 
     def test_projects_list_includes_page_content(self):
@@ -201,6 +202,20 @@ class PageContentAPITests(TestCase):
         self.assertEqual(payload["registrationStatus"], "ongoing")
         self.assertFalse(payload["registrationOpen"])
         self.assertFalse(payload["acceptingRegistrations"])
+
+    def test_training_program_detail_includes_registration_url(self):
+        response = self.client.get(
+            reverse(
+                "training_program_detail",
+                kwargs={"slug": "admin-training-program"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["program"]["registrationUrl"],
+            "https://example.com/register",
+        )
 
     def test_training_program_image_field_takes_priority_over_legacy_image_url(self):
         self.program.image.name = "training-programs/program-image"

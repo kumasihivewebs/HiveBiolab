@@ -139,6 +139,7 @@ class TrainingProgram(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     registration_open = models.BooleanField(default=True)
+    registration_url = models.URLField(max_length=1000, blank=True)
     duration = models.CharField(max_length=255, blank=True)
     format = models.CharField(max_length=255, blank=True)
     certification = models.CharField(max_length=255, blank=True)
