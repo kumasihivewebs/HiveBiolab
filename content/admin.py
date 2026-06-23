@@ -6,7 +6,6 @@ from .models import (
     Project,
     ProjectUpload,
     TrainingProgram,
-    TrainingProgramUpload,
 )
 
 
@@ -78,15 +77,8 @@ class ProjectAdmin(admin.ModelAdmin):
     )
 
 
-class TrainingProgramUploadInline(admin.TabularInline):
-    model = TrainingProgramUpload
-    extra = 1
-    fields = ("title", "file", "upload_type", "is_public", "sort_order")
-
-
 @admin.register(TrainingProgram)
 class TrainingProgramAdmin(admin.ModelAdmin):
-    inlines = (TrainingProgramUploadInline,)
     list_display = ("title", "level", "registration_open", "is_published")
     list_editable = ("is_published",)
     list_filter = ("level", "registration_open", "is_published")
@@ -103,9 +95,6 @@ class TrainingProgramAdmin(admin.ModelAdmin):
                     "description",
                     "level",
                     "image",
-                    "icon_name",
-                    "route",
-                    "sort_order",
                     "is_published",
                 )
             },
@@ -121,19 +110,4 @@ class TrainingProgramAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        (
-            "Details",
-            {
-                "fields": (
-                    "overview",
-                    "curriculum",
-                    "prerequisites",
-                    "outcomes",
-                    "duration",
-                    "format",
-                    "certification",
-                )
-            },
-        ),
-        ("System", {"fields": ("created_at", "updated_at")}),
     )
