@@ -4,7 +4,7 @@ charset-normalizer==3.4.7
 click==8.4.1
 cloudinary==1.44.2
 dj-database-url==2.3.0
-Django==6.0.7
+Django==6.0.8
 django-cloudinary-storage==0.3.0
 django-cors-headers==4.9.0
 django-jazzmin==3.0.1
